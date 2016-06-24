@@ -1,0 +1,74 @@
+Option Explicit
+
+Sub CATMain()
+
+  'Declare the variables for use
+  Dim targetFolder As Object
+  Dim docFile As File
+  Dim ii As Integer
+  Dim currDocument As Document
+  Dim currProduct As Product
+  REM Dim prodGroup As Groups
+  
+  Const FOLDER As String = "E:\Official\Presentations\V5\Automotive BIW\Assembly Planning Demo\Product\Product\CATProduct"
+  
+  'Check if folder exists
+  If CATIA.FileSystem.FolderExists(FOLDER) = False Then Exit Sub
+  
+  'Start reading the files from folder
+  Set targetFolder = CATIA.FileSystem.GetFolder(FOLDER)
+  If targetFolder.Files.Count > 0 Then
+    For ii = 1 To targetFolder.Files.Count
+      Set docFile = targetFolder.Files.Item(ii)
+      If UCase(Right(docFile.Name, 11)) = ".CATPRODUCT" Then
+        'Get Handle to the document
+        Set currDocument = CATIA.Documents.Open(docFile.Path)
+        
+        'Get Handle to the product
+        Set currProduct = currDocument.Product
+        'Create a Group for input to DMU Wrap command
+        Dim prodGroups As Groups
+        Set prodGroups = currProduct.GetTechnologicalObject("Groups")
+
+        Dim prodGroup As Group
+        Set prodGroup = prodGroups.Add()
+
+        prodGroup.AddExplicit currProduct
+
+        Dim prodMerges As Merges
+        Set prodMerges = currProduct.GetTechnologicalObject("Merges")
+        
+        Dim fileName As String
+        fileName = "E:\temp\doc_dump\" + Left(docFile.Name, Len(docFile.Name) - 11) + ".cgr"
+        
+        MergeAndSave prodMerges, prodGroup, fileName
+
+        Dim long1 As Long
+        long1 = prodGroup.CountExplicit()
+
+        prodGroup.RemoveExplicit 1
+
+        prodGroups.Remove prodGroup
+
+        Set prodMerges = currProduct.GetTechnologicalObject("Merges")
+
+        prodMerges.CleanUp
+        
+        currDocument.Close
+
+      End If
+    Next
+  End If
+
+End Sub
+
+Function MergeAndSave(iMergeObj As Merges, mergeGroup As Group, outDocName As String)
+  Dim outDocument As Document
+  
+  Set outDocument = iMergeObj.ComputeMerge(mergeGroup, 1.0, 0, 0)
+  outDocument.Activate
+  outDocument.SaveAs outDocName
+  
+  outDocument.Close
+  
+End Function
