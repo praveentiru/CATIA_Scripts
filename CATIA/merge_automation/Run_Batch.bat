@@ -1,0 +1,2 @@
+CD /D "C:\Program Files\Dassault Systemes\B25\win_b64\code\bin\"
+CNEXT.exe -env DELMIA.V5-6R2015.B25 -direnv "C:\ProgramData\DassaultSystemes\CATEnv" -batch -macro E:\Personal\Devel\DS_Related\CATIA_Scripts\CATIA\merge_automation\merge_automation.CATScript
