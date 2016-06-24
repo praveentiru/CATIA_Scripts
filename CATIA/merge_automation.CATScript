@@ -1,0 +1,55 @@
+Sub CATMain()
+
+  'Get the active document from the session
+  Dim activeDocument As ProductDocument
+  Set activeDocument = DELMIA.ActiveDocument
+
+  Dim activeProduct As Product
+  Set activeProduct = activeDocument.Product
+
+  'Create a Group for input to DMU Wrap command
+  Dim prodGroups As Groups
+  Set prodGroups = activeProduct.GetTechnologicalObject("Groups")
+
+  Dim prodGroup As Group
+  Set prodGroup = prodGroups.Add()
+
+  prodGroup.AddExplicit activeProduct
+
+  'Get hold of wrapping for computation
+  Dim prodMerges As Merges
+  Set prodMerges = activeProduct.GetTechnologicalObject("Merges")
+  
+  MergeAndSave prodMerges, prodGroup, "E:\temp\doc_dump\UNDERBODY STRUCTURE_WRAPPING.cgr"
+
+  REM Dim outDocument As Document
+  REM Set outDocument = prodMerges.ComputeMerge(prodGroup, 1.0, 0, 0)
+
+  REM Dim optimizerWorkBench1 As OptimizerWorkBench
+  REM Set optimizerWorkBench1 = activeDocument.GetWorkbench("OptimizerWorkBench")
+
+  Dim long1 As Long
+  long1 = prodGroup.CountExplicit()
+
+  prodGroup.RemoveExplicit 1
+
+  prodGroups.Remove prodGroup
+
+  REM outDocument.Activate
+
+  REM outDocument.SaveAs "E:\temp\doc_dump\UNDERBODY STRUCTURE_WRAPPING.cgr"
+
+  Set prodMerges = activeProduct.GetTechnologicalObject("Merges")
+
+  prodMerges.CleanUp
+
+End Sub
+
+Function MergeAndSave(iMergeObj As Merges, mergeGroup As Group, outDocName As String)
+  Dim outDocument As Document
+  
+  Set outDocument = iMergeObj.ComputeMerge(mergeGroup, 1.0, 0, 0)
+  outDocument.Activate
+  outDocument.SaveAs outDocName
+  
+End Function

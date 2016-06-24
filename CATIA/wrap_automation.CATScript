@@ -1,0 +1,44 @@
+Sub CATMain()
+
+  'Get the active document from the session
+  Dim activeDocument As ProductDocument
+  Set activeDocument = DELMIA.ActiveDocument
+
+  Dim activeProduct As Product
+  Set activeProduct = activeDocument.Product
+
+  'Create a Group for input to DMU Wrap command
+  Dim prodGroups As Groups
+  Set prodGroups = activeProduct.GetTechnologicalObject("Groups")
+
+  Dim prodGroup As Group
+  Set prodGroup = prodGroups.Add()
+
+  prodGroup.AddExplicit activeProduct
+
+  'Get hold of wrapping for computation
+  Dim prodWrappings As Wrappings
+  Set prodWrappings = activeProduct.GetTechnologicalObject("Wrappings")
+
+  Dim outDocument As Document
+  Set outDocument = prodWrappings.ComputeAWrapping(prodGroup, 10.0, 0.2, 0.0)
+
+  Dim optimizerWorkBench1 As OptimizerWorkBench
+  Set optimizerWorkBench1 = activeDocument.GetWorkbench("OptimizerWorkBench")
+
+  Dim long1 As Long
+  long1 = prodGroup.CountExplicit()
+
+  prodGroup.RemoveExplicit 1
+
+  prodGroups.Remove prodGroup
+
+  outDocument.Activate
+
+  outDocument.SaveAs "E:\temp\doc_dump\UNDERBODY STRUCTURE_WRAPPING.cgr"
+
+  Set prodWrappings = activeProduct.GetTechnologicalObject("Wrappings")
+
+  prodWrappings.CleanUp
+
+End Sub
