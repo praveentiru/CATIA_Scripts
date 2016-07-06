@@ -1,0 +1,82 @@
+Option Explicit
+
+Sub CATMain()
+
+  'Declare the variables for use
+  Dim targetFolder As Object
+  Dim textFile As File
+  Dim docFile As File
+  Dim ii As Integer
+  Dim currDocument As Document
+  Dim currProduct As Product
+  Rem Dim prodGroup As Groups
+  
+  Rem Const FOLDER As String = "E:\Official\Presentations\V5\Automotive BIW\Assembly Planning Demo\Product\Product\CATProduct"
+  Const fileList As String = "E:\temp\doc_dump\fileList.txt"
+  
+  'Check if folder exists
+  If CATIA.FileSystem.FileExists(fileList) = False Then Exit Sub
+  
+  'Start reading the files from folder
+  Set textFile = CATIA.FileSystem.GetFile(fileList)
+  Dim inputFile As TextStream
+  Set inputFile = textFile.OpenAsTextStream("ForReading")
+  Dim prodFileName As String
+  prodFileName = inputFile.ReadLine
+  While prodFileName <> ""
+    Dim fileTest As Boolean
+    fileTest = CATIA.FileSystem.FileExists(prodFileName)
+    If fileTest Then
+      Set docFile = CATIA.FileSystem.GetFile(prodFileName)
+      'Get Handle to the document
+      Set currDocument = CATIA.Documents.Open(docFile.Path)
+      
+      'Get Handle to the product
+      Set currProduct = currDocument.Product
+      
+      'Create a Group for input to DMU Merge command
+      Dim prodGroups As Groups
+      Set prodGroups = currProduct.GetTechnologicalObject("Groups")
+      Dim prodGroup As Group
+      Set prodGroup = prodGroups.Add()
+      prodGroup.AddExplicit currProduct
+      
+      'Create the Merge Object
+      Dim prodMerges As Merges
+      Set prodMerges = currProduct.GetTechnologicalObject("Merges")
+      
+      'Build the output CGR filename based on input CATProduct name
+      Dim fileName As String
+      fileName = "E:\temp\doc_dump\" + Left(docFile.Name, Len(docFile.Name) - 11) + ".cgr"
+      
+      'Merge the CATProduct to a single cgr
+      MergeAndSave prodMerges, prodGroup, fileName
+      
+      'Clean-up
+      Dim long1 As Long
+      long1 = prodGroup.CountExplicit()
+      prodGroup.RemoveExplicit 1
+      prodGroups.Remove prodGroup
+      Set prodMerges = currProduct.GetTechnologicalObject("Merges")
+      prodMerges.CleanUp
+      currDocument.Close
+      
+    End If
+    prodFileName = inputFile.ReadLine
+  Wend
+  
+  inputFile.Close
+
+End Sub
+
+Function MergeAndSave(iMergeObj As Merges, mergeGroup As Group, outDocName As String)
+  Dim outDocument As Document
+  
+  Set outDocument = iMergeObj.ComputeMerge(mergeGroup, 1.0, 0, 0)
+  outDocument.Activate
+  outDocument.SaveAs outDocName
+  
+  outDocument.Close
+  
+End Function
+
